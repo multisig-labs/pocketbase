@@ -58,6 +58,10 @@ func WithUserEmailPassword(email, password string) ClientOption {
 	}
 }
 
+func (c *Client) Resty() *resty.Client {
+  return c.client;
+}
+
 func (c *Client) Authorize() error {
 	return c.authorizer.authorize()
 }
