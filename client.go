@@ -59,7 +59,7 @@ func WithUserEmailPassword(email, password string) ClientOption {
 }
 
 func (c *Client) Resty() *resty.Client {
-  return c.client;
+	return c.client
 }
 
 func (c *Client) Authorize() error {
@@ -192,4 +192,31 @@ func (c *Client) List(collection string, params ParamsList) (ResponseList[map[st
 		return response, fmt.Errorf("[list] can't unmarshal response, err %w", err)
 	}
 	return response, nil
+}
+
+func (c *Client) Post(endpoint string, body any, result any) error {
+	if err := c.Authorize(); err != nil {
+		return err
+	}
+
+	request := c.client.R().
+		SetHeader("Content-Type", "application/json").
+		SetBody(body).
+		SetResult(&result)
+
+	resp, err := request.Post(c.url + endpoint)
+	if err != nil {
+		return fmt.Errorf("[post] can't send request to pocketbase, err %w", err)
+	}
+
+	if resp.IsError() {
+		return fmt.Errorf("[post] pocketbase returned status: %d, msg: %s, body: %s, err %w",
+			resp.StatusCode(),
+			resp.String(),
+			fmt.Sprintf("%+v", body), // TODO remove that after debugging
+			ErrInvalidResponse,
+		)
+	}
+
+	return nil
 }
